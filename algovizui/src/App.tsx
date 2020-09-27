@@ -100,6 +100,7 @@ class App extends React.Component {
       const line = this.vmEngine.executionLineNumber - 296 + 1
       let newDecorations = []
       if (line > 0) {
+        this.monaco.revealLineInCenter(line);
         newDecorations = [
           {
             range: new Monaco.Range(line, 1, line, 1),
@@ -120,7 +121,7 @@ class App extends React.Component {
 
     const editor = <>
       <Editor
-        height="50vh"
+        height="80vh"
         language="python"
         value={dummyCode}
         editorDidMount={handleEditorDidMount}
