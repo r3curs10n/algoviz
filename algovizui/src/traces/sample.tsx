@@ -14,53 +14,57 @@ export const trace = [
     {
       "op": "newLocal",
       "info": [
-        "v",
+        "arr2d",
         [
           true,
-          4404929392
+          4449229952
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4404929392,
+        4449229952,
+        [
+          [
+            true,
+            4449285056
+          ],
+          [
+            true,
+            4449278144
+          ]
+        ]
+      ]
+    },
+    {
+      "op": "new",
+      "info": [
+        4449285056,
         [
           [
             false,
-            9
+            0
           ],
           [
             false,
-            8
+            0
+          ]
+        ]
+      ]
+    },
+    {
+      "op": "new",
+      "info": [
+        4449278144,
+        [
+          [
+            false,
+            0
           ],
           [
             false,
-            7
-          ],
-          [
-            false,
-            6
-          ],
-          [
-            false,
-            5
-          ],
-          [
-            false,
-            4
-          ],
-          [
-            false,
-            3
-          ],
-          [
-            false,
-            2
-          ],
-          [
-            false,
-            1
+            0
           ]
         ]
       ]
@@ -70,13 +74,86 @@ export const trace = [
       "info": 344
     },
     {
+      "op": "modifyPos",
+      "info": [
+        4449285056,
+        1,
+        [
+          false,
+          5
+        ]
+      ]
+    },
+    {
+      "op": "line",
+      "info": 345
+    },
+    {
+      "op": "newLocal",
+      "info": [
+        "v",
+        [
+          true,
+          4449218464
+        ]
+      ]
+    },
+    {
+      "op": "new",
+      "info": [
+        4449218464,
+        [
+          [
+            false,
+            9
+          ],
+          [
+            false,
+            8
+          ],
+          [
+            false,
+            7
+          ],
+          [
+            false,
+            6
+          ],
+          [
+            false,
+            5
+          ],
+          [
+            false,
+            4
+          ],
+          [
+            false,
+            3
+          ],
+          [
+            false,
+            2
+          ],
+          [
+            false,
+            1
+          ]
+        ]
+      ]
+    },
+    {
+      "op": "line",
+      "info": 346
+    },
+    {
       "op": "pushFrame",
       "info": {
         "function": "mergesort",
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -119,7 +196,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -162,7 +239,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -205,7 +282,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -246,7 +323,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -286,14 +363,14 @@ export const trace = [
         "v1",
         [
           true,
-          4404867472
+          4449218064
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4404867472,
+        4449218064,
         [
           [
             false,
@@ -312,14 +389,14 @@ export const trace = [
         "v2",
         [
           true,
-          4404867232
+          4449215584
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4404867232,
+        4449215584,
         [
           [
             false,
@@ -389,7 +466,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         0,
         [
           false,
@@ -444,7 +521,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         1,
         [
           false,
@@ -502,11 +579,11 @@ export const trace = [
     },
     {
       "op": "delete",
-      "info": 4404867472
+      "info": 4449218064
     },
     {
       "op": "delete",
-      "info": 4404867232
+      "info": 4449215584
     },
     {
       "op": "line",
@@ -519,7 +596,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -562,7 +639,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -603,7 +680,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -643,14 +720,14 @@ export const trace = [
         "v1",
         [
           true,
-          4404867472
+          4449216144
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4404867472,
+        4449216144,
         [
           [
             false,
@@ -669,14 +746,14 @@ export const trace = [
         "v2",
         [
           true,
-          4404862560
+          4449216064
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4404862560,
+        4449216064,
         [
           [
             false,
@@ -746,7 +823,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         2,
         [
           false,
@@ -801,7 +878,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         3,
         [
           false,
@@ -859,11 +936,11 @@ export const trace = [
     },
     {
       "op": "delete",
-      "info": 4404867472
+      "info": 4449216144
     },
     {
       "op": "delete",
-      "info": 4404862560
+      "info": 4449216064
     },
     {
       "op": "line",
@@ -875,14 +952,14 @@ export const trace = [
         "v1",
         [
           true,
-          4404859920
+          4450162720
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4404859920,
+        4450162720,
         [
           [
             false,
@@ -905,14 +982,14 @@ export const trace = [
         "v2",
         [
           true,
-          4404862080
+          4449215984
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4404862080,
+        4449215984,
         [
           [
             false,
@@ -986,7 +1063,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         0,
         [
           false,
@@ -1037,7 +1114,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         1,
         [
           false,
@@ -1092,7 +1169,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         2,
         [
           false,
@@ -1147,7 +1224,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         3,
         [
           false,
@@ -1205,11 +1282,11 @@ export const trace = [
     },
     {
       "op": "delete",
-      "info": 4404859920
+      "info": 4450162720
     },
     {
       "op": "delete",
-      "info": 4404862080
+      "info": 4449215984
     },
     {
       "op": "line",
@@ -1222,7 +1299,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -1265,7 +1342,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -1308,7 +1385,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -1349,7 +1426,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -1389,14 +1466,14 @@ export const trace = [
         "v1",
         [
           true,
-          4405078288
+          4450173008
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4405078288,
+        4450173008,
         [
           [
             false,
@@ -1415,14 +1492,14 @@ export const trace = [
         "v2",
         [
           true,
-          4404862320
+          4450175728
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4404862320,
+        4450175728,
         [
           [
             false,
@@ -1492,7 +1569,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         4,
         [
           false,
@@ -1547,7 +1624,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         5,
         [
           false,
@@ -1605,11 +1682,11 @@ export const trace = [
     },
     {
       "op": "delete",
-      "info": 4405078288
+      "info": 4450173008
     },
     {
       "op": "delete",
-      "info": 4404862320
+      "info": 4450175728
     },
     {
       "op": "line",
@@ -1622,7 +1699,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -1665,7 +1742,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -1706,7 +1783,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -1749,7 +1826,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -1790,7 +1867,7 @@ export const trace = [
         "locals": {
           "v": [
             true,
-            4404929392
+            4449218464
           ],
           "start": [
             false,
@@ -1830,14 +1907,14 @@ export const trace = [
         "v1",
         [
           true,
-          4405077168
+          4450182240
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4405077168,
+        4450182240,
         [
           [
             false,
@@ -1856,14 +1933,14 @@ export const trace = [
         "v2",
         [
           true,
-          4405823920
+          4449215824
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4405823920,
+        4449215824,
         [
           [
             false,
@@ -1933,7 +2010,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         7,
         [
           false,
@@ -1988,7 +2065,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         8,
         [
           false,
@@ -2046,11 +2123,11 @@ export const trace = [
     },
     {
       "op": "delete",
-      "info": 4405077168
+      "info": 4450182240
     },
     {
       "op": "delete",
-      "info": 4405823920
+      "info": 4449215824
     },
     {
       "op": "line",
@@ -2062,14 +2139,14 @@ export const trace = [
         "v1",
         [
           true,
-          4404862000
+          4449462224
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4404862000,
+        4449462224,
         [
           [
             false,
@@ -2088,14 +2165,14 @@ export const trace = [
         "v2",
         [
           true,
-          4405824720
+          4449233328
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4405824720,
+        4449233328,
         [
           [
             false,
@@ -2169,7 +2246,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         6,
         [
           false,
@@ -2220,7 +2297,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         7,
         [
           false,
@@ -2275,7 +2352,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         8,
         [
           false,
@@ -2333,11 +2410,11 @@ export const trace = [
     },
     {
       "op": "delete",
-      "info": 4404862000
+      "info": 4449462224
     },
     {
       "op": "delete",
-      "info": 4405824720
+      "info": 4449233328
     },
     {
       "op": "line",
@@ -2349,14 +2426,14 @@ export const trace = [
         "v1",
         [
           true,
-          4404860560
+          4449215664
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4404860560,
+        4449215664,
         [
           [
             false,
@@ -2379,14 +2456,14 @@ export const trace = [
         "v2",
         [
           true,
-          4405821600
+          4449470896
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4405821600,
+        4449470896,
         [
           [
             false,
@@ -2464,7 +2541,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         4,
         [
           false,
@@ -2515,7 +2592,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         5,
         [
           false,
@@ -2566,7 +2643,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         6,
         [
           false,
@@ -2621,7 +2698,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         7,
         [
           false,
@@ -2676,7 +2753,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         8,
         [
           false,
@@ -2734,11 +2811,11 @@ export const trace = [
     },
     {
       "op": "delete",
-      "info": 4404860560
+      "info": 4449215664
     },
     {
       "op": "delete",
-      "info": 4405821600
+      "info": 4449470896
     },
     {
       "op": "line",
@@ -2750,14 +2827,14 @@ export const trace = [
         "v1",
         [
           true,
-          4405117088
+          4450182400
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4405117088,
+        4450182400,
         [
           [
             false,
@@ -2788,14 +2865,14 @@ export const trace = [
         "v2",
         [
           true,
-          4405101664
+          4449477408
         ]
       ]
     },
     {
       "op": "new",
       "info": [
-        4405101664,
+        4449477408,
         [
           [
             false,
@@ -2881,7 +2958,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         0,
         [
           false,
@@ -2932,7 +3009,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         1,
         [
           false,
@@ -2983,7 +3060,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         2,
         [
           false,
@@ -3034,7 +3111,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         3,
         [
           false,
@@ -3085,7 +3162,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         4,
         [
           false,
@@ -3140,7 +3217,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         5,
         [
           false,
@@ -3195,7 +3272,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         6,
         [
           false,
@@ -3250,7 +3327,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         7,
         [
           false,
@@ -3305,7 +3382,7 @@ export const trace = [
     {
       "op": "modifyPos",
       "info": [
-        4404929392,
+        4449218464,
         8,
         [
           false,
@@ -3363,11 +3440,11 @@ export const trace = [
     },
     {
       "op": "delete",
-      "info": 4405117088
+      "info": 4450182400
     },
     {
       "op": "delete",
-      "info": 4405101664
+      "info": 4449477408
     },
     {
       "op": "return",
@@ -3379,6 +3456,18 @@ export const trace = [
     },
     {
       "op": "delete",
-      "info": 4404929392
+      "info": 4449229952
+    },
+    {
+      "op": "delete",
+      "info": 4449285056
+    },
+    {
+      "op": "delete",
+      "info": 4449278144
+    },
+    {
+      "op": "delete",
+      "info": 4449218464
     }
   ]

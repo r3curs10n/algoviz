@@ -40,6 +40,60 @@ class OneDArray {
   }
 }
 
+class TwoDArray {
+  static is(obj: VmHeapObject, vmEngine: VmEngine) {
+    if (obj.listObject === null) {
+      return false
+    }
+    return obj.listObject.every(child => {
+      if (isNullOrUndefined(child.ptrValue) || !vmEngine.heap.storage.has(child.ptrValue)) {
+        return false
+      }
+      return OneDArray.is(vmEngine.heap.storage.get(child.ptrValue), vmEngine)
+    })
+  }
+
+  static getUI(obj: VmHeapObject, vmEngine: VmEngine) {
+    const arr = obj.listObject
+    const cols = Math.max(...arr.map(e => vmEngine.heap.storage.get(e.ptrValue).listObject.length))
+
+    const rowUi = (idx: number, list: VmHeapObject) => {
+      return <tr>
+        <th>{idx}</th>
+        {list.listObject.map(e => {
+          return <td>
+            <ProgramObjectUI object={e} executionStepIndex={vmEngine.executionStepIndex} />
+          </td>
+        })}
+      </tr>
+    }
+
+    const ui = <Table bordered size="sm">
+      <thead>
+        <tr>
+          <th>#</th>
+          {Array.from({ length: cols }).map((_, idx) => {
+            return <th>{idx}</th>
+          })}
+        </tr>
+      </thead>
+      <tbody>
+        {
+          arr.map((e, idx) => rowUi(idx, vmEngine.heap.storage.get(e.ptrValue)))
+        }
+      </tbody>
+    </Table>
+
+    const consumed = new Set()
+    arr.forEach(e => consumed.add(e.ptrValue))
+
+    return {
+      consumed: consumed,
+      ui: ui
+    }
+  }
+}
+
 interface ProgramHeapUIProps {
   vmEngine: VmEngine,
   highlightedPtr: number
@@ -48,6 +102,9 @@ interface ProgramHeapUIProps {
 const createUIFor = (obj: VmHeapObject, vmEngine: VmEngine) => {
   if (OneDArray.is(obj, vmEngine)) {
     return OneDArray.getUI(obj, vmEngine)
+  }
+  if (TwoDArray.is(obj, vmEngine)) {
+    return TwoDArray.getUI(obj, vmEngine)
   }
   return {
     consumed: new Set(),
@@ -65,9 +122,9 @@ export const ProgramHeapUI = (props: ProgramHeapUIProps) => {
     const r = createUIFor(e, props.vmEngine)
     r.consumed.forEach(v => consumed.add(v))
     elements.push(
-      <Card border={props.highlightedPtr === ptr ? "primary": null}>
+      <Card border={props.highlightedPtr === ptr ? "primary" : null}>
         <Card.Body>
-        {r.ui}
+          {r.ui}
         </Card.Body>
       </Card>
     )

@@ -57,6 +57,8 @@ def mergesort(v, start, end):
             i2+=1
 
 def main():
+    arr2d = [[0,0],[0,0]]
+    arr2d[0][1] = 5
     v = [9,8,7,6,5,4,3,2,1]
     mergesort(v, 0, len(v))
 
