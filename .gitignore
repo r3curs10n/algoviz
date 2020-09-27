@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# nodejs
+node_modules/
+dist/
+
+.DS_Store
