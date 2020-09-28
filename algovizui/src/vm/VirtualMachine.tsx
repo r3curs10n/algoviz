@@ -160,14 +160,7 @@ export class VmEngine {
     // }
   }
 
-  nextStepInternal() {
-    this.executionStepIndex++
-    if (this.executionStepIndex >= this.programTrace.length) {
-      return false
-    }
-
-    const e = this.programTrace[this.executionStepIndex]
-
+  executeStep(e: any) {
     if (e.op == "line") {
       this.executionLineNumber = e.info
     } else if (e.op == "pushFrame") {
@@ -186,6 +179,7 @@ export class VmEngine {
     } else if (e.op == "return") {
       this.executionLineNumber = -1
       this.stack.getTopFrame().returnVal = VmObject.fromVal(e.info)
+      this.stack.getTopFrame().returnVal.modifiedAtStep = this.executionStepIndex
     } else if (e.op == "popFrame") {
       this.executionLineNumber = -1
       this.stack.popFrame()
@@ -213,7 +207,19 @@ export class VmEngine {
       }
     } else if (e.op == "delete") {
       this.heap.storage.delete(e.info)
+    } else if (e.op == "batch") {
+      e.info.forEach(z => this.executeStep(z))
     }
+  }
+
+  nextStepInternal() {
+    this.executionStepIndex++
+    if (this.executionStepIndex >= this.programTrace.length) {
+      return false
+    }
+
+    const e = this.programTrace[this.executionStepIndex]
+    this.executeStep(e)
 
     this.heap.updateNamedReferences(this.stack)
     return true

@@ -2,6 +2,7 @@ import { VmEngine, VmStackFrame, VmObject } from '../../vm/VirtualMachine'
 import { ListGroup, ListGroupItem } from 'react-bootstrap'
 import React from 'react'
 import { ProgramObjectUI } from './ProgramObjectUI'
+import { isNullOrUndefined } from 'util'
 
 export interface ProgramStackUIProps {
   vmEngine: VmEngine,
@@ -22,6 +23,14 @@ const ProgramStackFrameUI = (props: ProgramStackFrameUIProps) => {
   props.frame.locals.forEach((val, key, _) => {
     locals.push(<ProgramObjectUI name={key} object={val} onClick={props.onVmObjectClick} executionStepIndex={props.vmEngine.executionStepIndex} />)
   })
+
+  let maybeReturn = null
+  if (!isNullOrUndefined(props.frame.returnVal)) {
+    maybeReturn = <div>
+      <ProgramObjectUI name="Return" object={props.frame.returnVal} onClick={props.onVmObjectClick} executionStepIndex={props.vmEngine.executionStepIndex} />)
+    </div>
+  }
+
   return <div>
     <div>
     {props.frame.methodName + '()'}
@@ -29,9 +38,7 @@ const ProgramStackFrameUI = (props: ProgramStackFrameUIProps) => {
     <div>
       {locals}
     </div>
-    <div>
-      {'Return: ' + (props.frame.returnVal ?? 'N/A')}
-    </div>
+    { maybeReturn}
   </div>
 }
 

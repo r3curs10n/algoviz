@@ -133,3 +133,6 @@ node_modules/
 dist/
 
 .DS_Store
+
+tracer/inputs
+!tracer/inputs/README

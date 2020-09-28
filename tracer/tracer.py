@@ -188,22 +188,25 @@ class ProgramHistory:
         self.state = ProgramState()
         self.log = []
 
+    def appendBatchedOps(self, ops):
+        self.log.append(('batch', ops))
+
     def pushFrame(self, frame: ProgramFrame):
         prevHeap = self.state.heap.toJson()
         self.state.pushFrame(frame)
         self.log.append(('pushFrame', frame))
         self.state.heap.trackAll(self.state.getReachableVars())
         curHeap = self.state.heap.toJson()
-        self.log += VirtualHeap.heapDiff(prevHeap, curHeap)
+        self.appendBatchedOps(VirtualHeap.heapDiff(prevHeap, curHeap))
 
     def popFrame(self, returnVal):
         prevHeap = self.state.heap.toJson()
         self.state.popFrame()
-        self.log.append(('return', returnVal))
+        self.log.append(('return', Variable.fromReal(returnVal).toJson()))
         self.log.append(('popFrame', returnVal))
         self.state.heap.trackAll(self.state.getReachableVars())
         curHeap = self.state.heap.toJson()
-        self.log += VirtualHeap.heapDiff(prevHeap, curHeap)
+        self.appendBatchedOps(VirtualHeap.heapDiff(prevHeap, curHeap))
 
     def update(self, frame: ProgramFrame, globals):
         if len(self.state.frames) == 0:
@@ -229,7 +232,7 @@ class ProgramHistory:
 
         self.state.heap.trackAll(self.state.getReachableVars())
         curHeap = self.state.heap.toJson()
-        self.log += VirtualHeap.heapDiff(prevHeap, curHeap)
+        self.appendBatchedOps(VirtualHeap.heapDiff(prevHeap, curHeap))
 
         self.log.append(('line', frame.lineNumber))
 
@@ -238,8 +241,11 @@ class ProgramHistory:
         return {varName: varValue for varName, varValue in globals.items() if varName.endswith('_g')}
 
     def toJson(self):
+        return self.toJsonInternal(self.log)
+
+    def toJsonInternal(self, log):
         jsonLog = []
-        for e in self.log:
+        for e in log:
             jsonE = {'op': e[0], 'info': {}}
             if e[0] == 'line':
                 jsonE['info'] = e[1]
@@ -263,6 +269,10 @@ class ProgramHistory:
                 jsonE["info"] = [e[1], e[2], e[3]]
             elif e[0] == "reset":
                 jsonE["info"] = [e[1], e[2]]
+            elif e[0] == "batch":
+                if len(e[1]) == 0:
+                    continue
+                jsonE["info"] = self.toJsonInternal(e[1])
             jsonLog.append(jsonE)
         return jsonLog
 
@@ -292,58 +302,3 @@ def traceit(frame: FrameType, event, arg):
     return traceit
 
 sys.settrace(traceit)
-
-def fibonacci(n):
-    if n == 0:
-        return 0
-    if n == 1:
-        return 1
-    ans = 0
-    ans += fibonacci(n-1)
-    ans += fibonacci(n-2)
-    return ans
-
-def fillList(v):
-    for i in range(5):
-        v[i] = i+100
-
-def mergesort(v, start, end):
-    if end - start <= 1:
-        return
-    mid = start + int((end - start) / 2)
-    mergesort(v, start, mid)
-    mergesort(v, mid, end)
-    v1 = v[start:mid]
-    v2 = v[mid:end]
-    i1 = 0
-    i2 = 0
-    i = start
-    while True:
-        if i1 < len(v1) and i2 < len(v2):
-            if v1[i1] < v2[i2]:
-                v[i] = v1[i1]
-                i+=1
-                i1+=1
-            else:
-                v[i] = v2[i2]
-                i+=1
-                i2+=1
-        elif i1 >= len(v1) and i2 >=len(v2):
-            break
-        elif i1 < len(v1):
-            v[i] = v1[i1]
-            i+=1
-            i1+=1
-        else:
-            v[i] = v2[i2]
-            i+=1
-            i2+=1
-
-def main():
-    arr2d = [[0,0],[0,0]]
-    arr2d[0][1] = 5
-    v = [9,8,7,6,5,4,3,2,1]
-    mergesort(v, 0, len(v))
-
-main()
-print(history)

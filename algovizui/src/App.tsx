@@ -4,70 +4,41 @@ import { trace as DummyTrace } from './traces/sample'
 import { ProgramStackUI } from './ui/stack/ProgramStackUI';
 import { BsArrowLeft, BsArrowRight } from 'react-icons/bs'
 import { VmEngine } from './vm/VirtualMachine';
-import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col } from 'react-bootstrap'
+import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col, Form, Spinner } from 'react-bootstrap'
 import Editor from "@monaco-editor/react";
 import * as Monaco from 'monaco-editor/esm/vs/editor/editor.main';
 import { ProgramHeapUI } from './ui/stack/ProgramHeapUI';
+import superagent from 'superagent'
 
 
-const dummyCode: string = `def fibonacci(n):
-    if n == 0:
-        return 0
-    if n == 1:
+const dummyCode: string = `
+def fillMatrix(m):
+    for i in range(len(m)):
+        for j in range(len(m[0])):
+            m[i][j] = i+j
+
+def fibonacci(n):
+    if n == 0 or n == 1:
         return 1
     ans = 0
     ans += fibonacci(n-1)
     ans += fibonacci(n-2)
     return ans
 
-def fillList(v):
-    for i in range(5):
-        v[i] = i+100
-
-def mergesort(v, start, end):
-    if end - start <= 1:
-        return
-    mid = start + int((end - start) / 2)
-    mergesort(v, start, mid)
-    mergesort(v, mid, end)
-    v1 = v[start:mid]
-    v2 = v[mid:end]
-    i1 = 0
-    i2 = 0
-    i = start
-    while True:
-        if i1 < len(v1) and i2 < len(v2):
-            if v1[i1] < v2[i2]:
-                v[i] = v1[i1]
-                i+=1
-                i1+=1
-            else:
-                v[i] = v2[i2]
-                i+=1
-                i2+=1
-        elif i1 >= len(v1) and i2 >=len(v2):
-            break
-        elif i1 < len(v1):
-            v[i] = v1[i1]
-            i+=1
-            i1+=1
-        else:
-            v[i] = v2[i2]
-            i+=1
-            i2+=1
-
 def main():
-    arr2d = [[0,0],[0,0]]
-    arr2d[0][1] = 5
-    v = [9,8,7,6,5,4,3,2,1]
-    mergesort(v, 0, len(v))
+    m = [[0,0,0], [0,0,0], [0,0,0]]
+    fillMatrix(m)
+    fibonacci(4)
 
-main()
 `;
 
 interface State {
   lineNumber: number
   highlightedPtr: number
+  isEditing: boolean
+  isWaiting: boolean
+  code: string
+  trace: any
 }
 
 class App extends React.Component {
@@ -81,7 +52,11 @@ class App extends React.Component {
     this.vmEngine = new VmEngine(DummyTrace)
     this.state = {
       lineNumber: -1,
-      highlightedPtr: 0
+      highlightedPtr: 0,
+      isEditing: true,
+      isWaiting: false,
+      code: dummyCode,
+      trace: DummyTrace
     }
     this.decorations = []
   }
@@ -99,7 +74,7 @@ class App extends React.Component {
       } else {
         this.vmEngine.prevStep()
       }
-      const line = this.vmEngine.executionLineNumber - 296 + 1
+      const line = this.vmEngine.executionLineNumber
       let newDecorations = []
       if (line > 0) {
         this.monaco.revealLineInCenter(line);
@@ -121,17 +96,61 @@ class App extends React.Component {
       this.monaco = editor
     }
 
+    const enterEditMode = () => {
+      this.decorations = this.monaco.deltaDecorations(this.decorations, [])
+      this.setState({ isEditing: true, isWaiting: false })
+    }
+
+    const enterRunMode = () => {
+      const code: string = this.monaco.getValue()
+      this.setState({ isEditing: false, isWaiting: true, code: code, trace: [] })
+      superagent
+        .post('/trace')
+        .send({ code: code })
+        .then(res => {
+          if (this.state.isWaiting === false) {
+            return
+          }
+          if (res.status !== 200) {
+            alert(res.status)
+          } else {
+            this.vmEngine = new VmEngine(res.body)
+            this.setState({ trace: res.body, isWaiting: false })
+          }
+        })
+    }
+
+    const getRunControls = () => {
+      if (this.state.isEditing === false && this.state.isWaiting == false) {
+        return <ButtonGroup>
+          <Button onClick={() => { incrementExecutionStep(-1) }}><BsArrowLeft /></Button>
+          <Button onClick={() => { incrementExecutionStep(1) }}><BsArrowRight /></Button>
+        </ButtonGroup>
+      } else if (this.state.isWaiting === true) {
+        return <Spinner animation="border" />
+      }
+      return <></>
+    }
+
     const editor = <>
       <Editor
         height="80vh"
         language="python"
-        value={dummyCode}
+        value={this.state.code}
+        theme={this.state.isEditing ? "dark" : "light"}
         editorDidMount={handleEditorDidMount}
+        options={{ readOnly: !this.state.isEditing }}
       />
-      <ButtonGroup>
-        <Button><BsArrowLeft onClick={() => { incrementExecutionStep(-1) }} /></Button>
-        <Button><BsArrowRight onClick={() => { incrementExecutionStep(1) }} /></Button>
-      </ButtonGroup>
+      <Form className="padded-container">
+        <Form.Row className="align-items-center">
+          <Col xs="auto">{getRunControls()}</Col>
+          <Col xs="auto">
+            {
+              this.state.isEditing ? <Button onClick={enterRunMode}>Run</Button> : <Button onClick={enterEditMode}>Edit</Button>
+            }
+          </Col>
+        </Form.Row>
+      </Form>
     </>
 
     return (
@@ -148,10 +167,10 @@ class App extends React.Component {
                 {editor}
               </Col>
               <Col xs="3">
-                {stack}
+                {!this.state.isEditing && !this.state.isWaiting ? stack : <></>}
               </Col>
               <Col>
-                {heap}
+                {!this.state.isEditing && !this.state.isWaiting ? heap : <></>}
               </Col>
             </Row>
           </Container>
