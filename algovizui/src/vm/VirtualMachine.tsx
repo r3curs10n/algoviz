@@ -77,6 +77,16 @@ export class VmStackFrame {
     this.methodName = methodName
     this.args = args
   }
+
+  getVariable(name: string): VmObject {
+    if (this.locals.has(name)) {
+      return this.locals.get(name)
+    }
+    if (this.args.has(name)) {
+      return this.args.get(name)
+    }
+    return null
+  }
 }
 
 export class VmStack {
@@ -104,11 +114,39 @@ interface ExecutionStep {
   info: any,
 }
 
+interface ArrayIndexInference {
+  funcName: string,
+  array: string,
+  var: string,
+  index: number
+}
+
+export interface MemberPointerInference {
+  className: string,
+  member: string
+}
+
+interface Inference {
+  type: string,
+  data: any
+}
+
+interface ArrayIndexAnnotation {
+  indexVarName: string,
+  indexVarValue: number,
+  indexDimension: number
+}
+
 export class VmHeapObject {
+  type: string
+  ptr: number
   listObject?: Array<VmObject>
   mapObject?: Map<string, VmObject>
 
-  constructor(){}
+  constructor(ptr: number, type){
+    this.type = type
+    this.ptr = ptr
+  }
 }
 
 export class VmHeap {
@@ -141,11 +179,13 @@ export class VmEngine {
   stack: VmStack
   heap: VmHeap
   programTrace: Array<ExecutionStep>
+  programInfer: Array<Inference>
   executionStepIndex: number = -1
   executionLineNumber: number = -1
 
-  constructor(programTrace: Array<ExecutionStep>) {
-    this.programTrace = programTrace
+  constructor(trace) {
+    this.programTrace = trace.log
+    this.programInfer = trace.infer
     this.stack = new VmStack()
     this.heap = new VmHeap()
   }
@@ -185,12 +225,17 @@ export class VmEngine {
       this.stack.popFrame()
     } else if (e.op == "new") {
       const id: number = e.info[0]
-      let obj = new VmHeapObject()
+      let obj = new VmHeapObject(id, "")
       if (Array.isArray(e.info[1])) {
         const val: Array<any> = e.info[1]
         obj.listObject = val.map((z => VmObject.fromVal(z)))
+        obj.type = "list"
       } else {
-        // handle map case
+        obj.type = e.info[1].type
+        obj.mapObject = new Map()
+        Object.entries(e.info[1].members).forEach(([key, val]) => {
+          obj.mapObject.set(key, VmObject.fromVal(val as Array<any>))
+        })
       }
       this.heap.storage.set(id, obj)
     } else if (e.op == "modifyPos") {
@@ -205,6 +250,14 @@ export class VmEngine {
       } else {
         curList.listObject[pos] = obj
       }
+    } else if (e.op == "modifyKey" || e.op == "addKey") {
+      const id: number = e.info[0]
+      const key = e.info[1]
+      const val = e.info[2]
+      const curMap = this.heap.storage.get(id)
+      const obj = VmObject.fromVal(val)
+      obj.modifiedAtStep = this.executionStepIndex
+      curMap.mapObject.set(key, obj)
     } else if (e.op == "delete") {
       this.heap.storage.delete(e.info)
     } else if (e.op == "batch") {
@@ -237,5 +290,42 @@ export class VmEngine {
     this.executionLineNumber = -1
     this.executionStepIndex = -1
     this.stack = new VmStack()
+  }
+
+  getMemberPointerAnnotationsFor(ptr: number) {
+    const obj = this.heap.storage.get(ptr)
+    return this.programInfer.filter(
+      e => e.type === "memberPointer" && e.data.className === obj.type
+    ).map(
+      e => e.data as MemberPointerInference
+    )
+  }
+
+  getArrayIndexAnnotationsFor(ptr: number) {
+    const frame = this.stack.getTopFrame()
+    const inferences: Array<ArrayIndexAnnotation> = []
+    frame.locals.forEach((localVarValue, localVarName) => {
+      this.programInfer.forEach(genericInference => {
+        if (genericInference.type !== "arrayIndex") {
+          return
+        }
+        const inference: ArrayIndexInference = genericInference.data
+        if (inference.funcName !== frame.methodName) {
+          return
+        }
+        if (inference.var !== localVarName) {
+          return
+        }
+        if (frame.getVariable(inference.array).ptrValue !== ptr) {
+          return
+        }
+        inferences.push({
+          indexVarName: localVarName,
+          indexVarValue: localVarValue.numberValue,
+          indexDimension: inference.index
+        })
+      })
+    })
+    return inferences
   }
 }

@@ -9,10 +9,14 @@ import Editor from "@monaco-editor/react";
 import * as Monaco from 'monaco-editor/esm/vs/editor/editor.main';
 import { ProgramHeapUI } from './ui/stack/ProgramHeapUI';
 import superagent from 'superagent'
+import { ProgramHeapGraphUI } from './ui/stack/ProgramHeapGraphUI';
 
 
 const dummyCode: string = `
 def fillMatrix(m):
+    """
+    index: m[i][j]
+    """
     for i in range(len(m)):
         for j in range(len(m[0])):
             m[i][j] = i+j
@@ -25,10 +29,32 @@ def fibonacci(n):
     ans += fibonacci(n-2)
     return ans
 
+class TreeNode:
+    """
+    pointers: left, right
+    """
+    def __init__(self):
+        self.data = 0
+        self.left = None
+        self.right = None
+
+def constructTree():
+    a = TreeNode()
+    b = TreeNode()
+    c = TreeNode()
+    a.data = 1
+    b.data = 2
+    c.data = 3
+    a.left = b
+    a.right = c
+    a.data += 1
+
 def main():
+    constructTree()
+    testMap = {1: 100, 2: 200}
     m = [[0,0,0], [0,0,0], [0,0,0]]
     fillMatrix(m)
-    fibonacci(4)
+    # fibonacci(4)
 
 `;
 
@@ -62,11 +88,12 @@ class App extends React.Component {
   }
 
   render() {
-    const stack = <ProgramStackUI vmEngine={this.vmEngine} onVmObjectClick={ptr => {
-      this.setState({ highlightedPtr: ptr })
-    }} />
+    const onVmObjectClick = ptr => {
+      this.setState({ highlightedPtr: ptr})
+    }
+    const stack = <ProgramStackUI vmEngine={this.vmEngine} onVmObjectClick={onVmObjectClick} />
 
-    const heap = <ProgramHeapUI vmEngine={this.vmEngine} highlightedPtr={this.state.highlightedPtr} />
+    const heap = <ProgramHeapUI vmEngine={this.vmEngine} highlightedPtr={this.state.highlightedPtr} onVmObjectClick={onVmObjectClick} />
 
     const incrementExecutionStep = (val: number) => {
       if (val > 0) {
@@ -170,7 +197,7 @@ class App extends React.Component {
                 {!this.state.isEditing && !this.state.isWaiting ? stack : <></>}
               </Col>
               <Col>
-                {!this.state.isEditing && !this.state.isWaiting ? heap : <></>}
+                {!this.state.isEditing && !this.state.isWaiting || true ? heap : <></>}
               </Col>
             </Row>
           </Container>

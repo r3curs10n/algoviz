@@ -16,7 +16,7 @@ export const ProgramObjectUI = (props: ProgramObjectUIProps) => {
     </div>
   } else {
     return <div className={props.object.modifiedAtStep === props.executionStepIndex ? "highlightedLine" : ""}>
-      {props.name + ': '}
+      {isNullOrUndefined(props.name) ? '' : (props.name + ': ')}
       <a href="#" onClick={() => {
         if (props.onClick !== null) {
           props.onClick(props.object.ptrValue)

@@ -3,21 +3,27 @@ import { ListGroup, ListGroupItem, Table, Card } from 'react-bootstrap'
 import React from 'react'
 import { isNullOrUndefined } from 'util'
 import { ProgramObjectUI } from './ProgramObjectUI'
+import { ProgramHeapGraphUI } from './ProgramHeapGraphUI'
 
 class OneDArray {
   static is(obj: VmHeapObject, _vmEngine: VmEngine) {
-    if (obj.listObject === null) {
+    if (isNullOrUndefined(obj.listObject)) {
       return false
     }
     return obj.listObject.every(e => isNullOrUndefined(e.ptrValue))
   }
 
   static getUI(obj: VmHeapObject, vmEngine: VmEngine) {
+    const annotations = vmEngine.getArrayIndexAnnotationsFor(obj.ptr)
     const arr = obj.listObject
     const ui = <Table bordered size="sm">
       <thead>
         <tr>
-          {arr.map((_, idx) => <th>{idx}</th>)}
+          {arr.map((_, idx) => {
+            const indices = annotations.filter(e => e.indexVarValue === idx && e.indexDimension === 0).map(e => e.indexVarName)
+            const annotation = indices.length > 0 ? '(' + indices.join(", ") + ')' : ""
+            return <th className="w-25">{`${idx} ${annotation}`}</th>
+          })}
         </tr>
       </thead>
       <tbody>
@@ -42,7 +48,7 @@ class OneDArray {
 
 class TwoDArray {
   static is(obj: VmHeapObject, vmEngine: VmEngine) {
-    if (obj.listObject === null) {
+    if (isNullOrUndefined(obj.listObject)) {
       return false
     }
     return obj.listObject.every(child => {
@@ -57,9 +63,19 @@ class TwoDArray {
     const arr = obj.listObject
     const cols = Math.max(...arr.map(e => vmEngine.heap.storage.get(e.ptrValue).listObject.length))
 
+    const annotations = vmEngine.getArrayIndexAnnotationsFor(obj.ptr)
+
     const rowUi = (idx: number, list: VmHeapObject) => {
       return <tr>
-        <th>{idx}</th>
+        <th>
+          {
+            (() => {
+              const indices = annotations.filter(e => e.indexVarValue === idx && e.indexDimension === 0).map(e => e.indexVarName)
+              const annotation = indices.length > 0 ? '(' + indices.join(", ") + ')' : ""
+              return `${idx} ${annotation}`
+            }
+            )()}
+        </th>
         {list.listObject.map(e => {
           return <td>
             <ProgramObjectUI object={e} executionStepIndex={vmEngine.executionStepIndex} />
@@ -71,9 +87,11 @@ class TwoDArray {
     const ui = <Table bordered size="sm">
       <thead>
         <tr>
-          <th>#</th>
+          <th className="w-25">#</th>
           {Array.from({ length: cols }).map((_, idx) => {
-            return <th>{idx}</th>
+            const indices = annotations.filter(e => e.indexVarValue === idx && e.indexDimension === 1).map(e => e.indexVarName)
+            const annotation = indices.length > 0 ? '(' + indices.join(", ") + ')' : ""
+            return <th className="w-25">{`${idx} ${annotation}`}</th>
           })}
         </tr>
       </thead>
@@ -94,17 +112,59 @@ class TwoDArray {
   }
 }
 
-interface ProgramHeapUIProps {
-  vmEngine: VmEngine,
-  highlightedPtr: number
+class Dict {
+  static is(obj: VmHeapObject, _vmEngine: VmEngine) {
+    if (isNullOrUndefined(obj.mapObject) || obj.type !== "dict") {
+      return false
+    }
+    return true
+  }
+
+  static getUI(obj: VmHeapObject, vmEngine: VmEngine, onVmObjectClick) {
+    const members = obj.mapObject
+    const ui = <Table bordered size="sm">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {(() => {
+          let rows = []
+          members.forEach((val, key) => {
+            rows.push(<tr>
+              <td>{key}</td>
+              <td><ProgramObjectUI object={val} executionStepIndex={vmEngine.executionStepIndex} onClick={onVmObjectClick} /></td>
+            </tr>)
+          })
+          return rows
+        })()}
+      </tbody>
+    </Table>
+
+    return {
+      consumed: new Set(),
+      ui: ui
+    }
+  }
 }
 
-const createUIFor = (obj: VmHeapObject, vmEngine: VmEngine) => {
+interface ProgramHeapUIProps {
+  vmEngine: VmEngine,
+  highlightedPtr: number,
+  onVmObjectClick: (ptr: number) => void
+}
+
+const createUIFor = (obj: VmHeapObject, vmEngine: VmEngine, onVmObjectClick) => {
   if (OneDArray.is(obj, vmEngine)) {
     return OneDArray.getUI(obj, vmEngine)
   }
   if (TwoDArray.is(obj, vmEngine)) {
     return TwoDArray.getUI(obj, vmEngine)
+  }
+  if (Dict.is(obj, vmEngine)) {
+    return Dict.getUI(obj, vmEngine, onVmObjectClick)
   }
   return {
     consumed: new Set(),
@@ -119,7 +179,7 @@ export const ProgramHeapUI = (props: ProgramHeapUIProps) => {
   const elements = []
 
   const addUI = (ptr: number, e: VmHeapObject) => {
-    const r = createUIFor(e, props.vmEngine)
+    const r = createUIFor(e, props.vmEngine, props.onVmObjectClick)
     r.consumed.forEach(v => consumed.add(v))
     elements.push(
       <Card border={props.highlightedPtr === ptr ? "primary" : null}>
@@ -130,8 +190,20 @@ export const ProgramHeapUI = (props: ProgramHeapUIProps) => {
     )
   }
 
+  const graphUI = ProgramHeapGraphUI.createUI(props.vmEngine, props.highlightedPtr)
+  graphUI.consumed.forEach(v => consumed.add(v))
+  if (graphUI.consumed.size > 0) {
+    elements.push(
+      <Card>
+        <Card.Body>
+          {graphUI.ui}
+        </Card.Body>
+      </Card>
+    )
+  }
+
   heap.namedReferences.forEach(ptr => {
-    if (!heap.storage.has(ptr)) {
+    if (!heap.storage.has(ptr) || consumed.has(ptr)) {
       return;
     }
     consumed.add(ptr)

@@ -17,27 +17,21 @@ app.get('/hello', (req, res) => {
 })
 
 app.post('/trace', bodyParser.json(), function(req, res) {
-  console.log(req.body.code)
-  const content = req.body.code + `
-import os, sys
-currentdir = os.path.dirname(os.path.realpath(__file__))
-parentdir = os.path.dirname(currentdir)
-sys.path.append(parentdir)
-import tracer
-
-main()
-print(tracer.history)
-`
-  const fileName = crypto.createHash('md5').update(content).digest("hex") + '.py'
+  const content = req.body.code
+  const hash = crypto.createHash('md5').update(content).digest("hex")
+  const fileName = hash + '.py'
   const filePath = getAbsolutePath(`tracer/inputs/${fileName}`)
   fs.writeFile(filePath, content, err => {
     if (err) {
       res.sendStatus(404)
       return
     }
-    exec(`python3 ${filePath}`, (error, stdout, stderr) => {
-      if (error) {
-        res.sendStatus(404)
+    const moduleName = "inputs." + hash
+    exec(`cd ../tracer && python3 runner.py --module ${moduleName}`, (error, stdout, stderr) => {
+      console.log(stdout)
+      if (error || stderr) {
+        console.log(stderr)
+        res.status(404).send()
         return
       }
       res.json(JSON.parse(stdout)).status(200).send()

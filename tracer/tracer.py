@@ -4,6 +4,11 @@ import sys
 from types import FrameType
 import json
 import typing
+import time
+import inspect
+
+class TimeoutException(Exception):
+    pass
 
 primitives = (int, str, bool, float)
 
@@ -15,6 +20,9 @@ class Variable:
     @staticmethod
     def fromReal(x):
         z = Variable()
+        if x is None:
+            z.val = 0
+            z.isPtr = True
         if isinstance(x, primitives):
             z.val = x
             z.isPtr = False
@@ -30,6 +38,15 @@ class Variable:
         if isinstance(other, Variable):
             return self.val == other.val and self.isPtr == other.isPtr
         return False
+
+class CustomObject:
+    def __init__(self, obj):
+        self.typeName = obj.__class__.__name__
+        self.members = {}
+
+    @staticmethod
+    def getMembers(obj):
+        return {k: obj.__getattribute__(k) for k in dir(obj) if not k.startswith('__')}
 
 class VariableCollection:
     def __init__(self, collection: dict):
@@ -61,6 +78,8 @@ class VirtualHeap:
             self.trackTransitive(v)
 
     def trackTransitive(self, e):
+        if e is None:
+            return
         if isinstance(e, primitives):
             return
         elif isinstance(e, list):
@@ -79,15 +98,24 @@ class VirtualHeap:
                 self.objects[id(e)][k] = Variable.fromReal(v)
                 self.trackTransitive(v)
         else:
-            raise Exception('Object type not supported ' + str(eType))
+            # User defined type
+            if id(e) not in self.objects:
+                self.objects[id(e)] = CustomObject(e)
+            for k, v in CustomObject.getMembers(e).items():
+                self.objects[id(e)].members[k] = Variable.fromReal(v)
+                self.trackTransitive(v)
 
     def toJson(self):
         jsonHeap = {}
         for ptr, e in self.objects.items():
-            if type(e) == list:
+            if isinstance(e, list):
                 jsonHeap[ptr] = [z.toJson() for z in e]
-            elif type(e) == dict:
-                jsonHeap[ptr] = {k: v.toJson() for k, v in e.items()}
+            elif isinstance(e, dict):
+                jsonMembers = {k: v.toJson() for k, v in e.items()}
+                jsonHeap[ptr] = {"type": "dict", "members": jsonMembers}
+            elif isinstance(e, CustomObject):
+                jsonMembers = {k: v.toJson() for k, v in e.members.items()}
+                jsonHeap[ptr] = {"type": e.typeName, "members": jsonMembers}
         return jsonHeap
 
     @staticmethod
@@ -102,7 +130,7 @@ class VirtualHeap:
             else:
                 prevE = prevHeapJson[ptr]
                 if type(e) == dict:
-                    diffLog += VirtualHeap.dictDiff(ptr, prevE, e)
+                    diffLog += VirtualHeap.dictDiff(ptr, prevE["members"], e["members"])
                 elif type(e) == list:
                     diffLog += VirtualHeap.listDiff(ptr, prevE, e)
         return diffLog
@@ -180,18 +208,24 @@ class ProgramState:
         self.frames[-1] = frame
         self.globals = globals
 
-    def getActiveFrame(self):
+    def getActiveFrame(self) -> ProgramFrame:
         return self.frames[-1]
 
 class ProgramHistory:
     def __init__(self):
         self.state = ProgramState()
         self.log = []
+        self.executionStartTimeSeconds = time.time()
+        self.shouldStopTracking = False
 
     def appendBatchedOps(self, ops):
-        self.log.append(('batch', ops))
+        if len(ops) > 0:
+            self.log.append(('batch', ops))
 
     def pushFrame(self, frame: ProgramFrame):
+        if self.shouldStopTracking:
+            return
+
         prevHeap = self.state.heap.toJson()
         self.state.pushFrame(frame)
         self.log.append(('pushFrame', frame))
@@ -200,15 +234,26 @@ class ProgramHistory:
         self.appendBatchedOps(VirtualHeap.heapDiff(prevHeap, curHeap))
 
     def popFrame(self, returnVal):
+        if self.shouldStopTracking:
+            return
+
         prevHeap = self.state.heap.toJson()
+
+        additionalVars = [returnVal]
+        if (self.state.getActiveFrame().methodName == "__init__"):
+            additionalVars.append(self.state.getActiveFrame().locals["self"])
+
         self.state.popFrame()
         self.log.append(('return', Variable.fromReal(returnVal).toJson()))
         self.log.append(('popFrame', returnVal))
-        self.state.heap.trackAll(self.state.getReachableVars())
+        self.state.heap.trackAll(self.state.getReachableVars() + additionalVars)
         curHeap = self.state.heap.toJson()
         self.appendBatchedOps(VirtualHeap.heapDiff(prevHeap, curHeap))
 
     def update(self, frame: ProgramFrame, globals):
+        if self.shouldStopTracking:
+            return
+
         if len(self.state.frames) == 0:
             return
         globals = ProgramHistory.filterGlobals(globals)
@@ -269,7 +314,7 @@ class ProgramHistory:
                 jsonE["info"] = [e[1], e[2], e[3]]
             elif e[0] == "reset":
                 jsonE["info"] = [e[1], e[2]]
-            elif e[0] == "batch":
+            elif e[0].startswith("batch"):
                 if len(e[1]) == 0:
                     continue
                 jsonE["info"] = self.toJsonInternal(e[1])
@@ -282,6 +327,8 @@ class ProgramHistory:
 history: ProgramHistory = ProgramHistory()
 
 def traceit(frame: FrameType, event, arg):
+    if (time.time() - history.executionStartTimeSeconds > 2):
+        raise TimeoutException()
     if event == "call":
         base: FrameType = frame
         mainFound = False
@@ -295,6 +342,8 @@ def traceit(frame: FrameType, event, arg):
 
     if event == "call":
         history.pushFrame(ProgramFrame.fromTraceFrame(frame))
+    elif event == "exception":
+        history.shouldStopTracking = True
     elif event == "return":
         history.popFrame(arg)
     elif event == "line":
