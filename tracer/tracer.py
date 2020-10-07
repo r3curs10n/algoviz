@@ -329,16 +329,16 @@ history: ProgramHistory = ProgramHistory()
 def traceit(frame: FrameType, event, arg):
     if (time.time() - history.executionStartTimeSeconds > 2):
         raise TimeoutException()
-    if event == "call":
-        base: FrameType = frame
-        mainFound = False
-        while base:
-            if base.f_code.co_name == "main":
-                mainFound = True
-                break
-            base = base.f_back
-        if not mainFound:
-            return None
+
+    base: FrameType = frame
+    mainFound = False
+    while base:
+        if base.f_code.co_name == "main":
+            mainFound = True
+            break
+        base = base.f_back
+    if not mainFound:
+        return traceit
 
     if event == "call":
         history.pushFrame(ProgramFrame.fromTraceFrame(frame))
