@@ -5,25 +5,39 @@ import argparse
 import json
 
 dummyCode = '''
+
+
 class TreeNode:
     """
     pointers: left, right
     """
-    def __init__(self):
+    def __init__(self, data):
+        self.data = data
         self.left = None
         self.right = None
-        self.data = 0
 
-def hello():
-    """
-    index: v[i][j]
-    """
-    hello()
-    x = TreeNode()
-    try:
-        y=5
-    except:
-        pass
+def traverseInOrder(outList, root):
+    if root.left is not None:
+        traverseInOrder(outList, root.left)
+    outList.append(root.data)
+    if root.right is not None:
+        traverseInOrder(outList, root.right)
+
+def constructTree():
+    root = TreeNode(0)
+    root.left = TreeNode(11)
+    root.right = TreeNode(12)
+    root.left.left = TreeNode(21)
+    root.left.right = TreeNode(22)
+    return root
+
+def main():
+    root = constructTree()
+    outList = []
+    traverseInOrder(outList, root)
+    exec(0)
+    return 0
+
 '''
 
 class ArrayIndexInference:
@@ -115,6 +129,8 @@ def infer(code):
 
         # Override
         def visit_Call(self, node):
+            if not isinstance(node.func, ast.Name):
+                return
             funcName = node.func.id
             if funcName in ["exec", "eval", "globals", "locals", "dir", "setattr", "getattr", "open", "compile"]:
                 self.securityIssue = "Use of {}() not allowed".format(funcName)

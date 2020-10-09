@@ -4,93 +4,19 @@ import { trace as DummyTrace } from './traces/sample'
 import { ProgramStackUI } from './ui/stack/ProgramStackUI';
 import { BsArrowLeft, BsArrowRight, BsArrowBarRight } from 'react-icons/bs'
 import { VmEngine } from './vm/VirtualMachine';
-import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col, Form, Spinner, Tooltip, OverlayTrigger, Popover, Alert } from 'react-bootstrap'
+import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col, Form, Spinner, Tooltip, OverlayTrigger, Popover, Alert, NavDropdown, FormControl } from 'react-bootstrap'
 import Editor from "@monaco-editor/react";
 import * as Monaco from 'monaco-editor/esm/vs/editor/editor.main';
 import { ProgramHeapUI } from './ui/stack/ProgramHeapUI';
 import superagent from 'superagent'
 import { isNullOrUndefined } from 'util';
-
-
-const dummyCode: string = `
-
-def fillMatrix(m):
-    """
-    index: m[i][j]
-    """
-    for i in range(len(m)):
-        for j in range(len(m[0])):
-            m[i][j] = i+j
-
-def fibonacci(n):
-    if n == 0 or n == 1:
-        return 1
-    ans = 0
-    ans += fibonacci(n-1)
-    ans += fibonacci(n-2)
-    return ans
-
-class TreeNode:
-    """
-    pointers: left, right
-    """
-    def __init__(self):
-        self.data = 0
-        self.left = None
-        self.right = None
-
-class ListNode:
-    """
-    pointers: next
-    """
-    def __init__(self):
-        self.data = 0
-        self.next = None
-
-def constructList():
-    head = ListNode()
-    head.data = 1
-
-    cur = head
-    for i in range (2, 5):
-        cur.next = ListNode()
-        cur.next.data = i
-        cur = cur.next
-    return head
-
-def constructTree():
-    a = TreeNode()
-    b = TreeNode()
-    c = TreeNode()
-    a.data = 1
-    b.data = 2
-    c.data = 3
-    a.left = b
-    a.right = c
-    a.data += 1
-
-def reverseList(head):
-    if head.next is None:
-        return (head, head)
-    newHead, newTail = reverseList(head.next)
-    newTail.next = head
-    head.next = None
-    return newHead, head
-
-def main():
-    # constructTree()
-    # testMap = {1: 100, 2: 200}
-    m = [[0,0,0], [0,0,0], [0,0,0]]
-    fillMatrix(m)
-    # fibonacci(4)
-
-    l = constructList()
-    newHead, newTail = reverseList(l)
-    return 0
-
-
-
-`;
+import { ProgramList } from './samples/Programs'
+import { LinkContainer } from "react-router-bootstrap"
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+} from "react-router-dom";
 
 interface State {
   lineNumber: number
@@ -101,13 +27,56 @@ interface State {
   trace: any
 }
 
-class App extends React.Component {
+const AppContainer = () => {
+  return (
+    <Router forceRefresh>
+      <Navbar bg="dark" variant="dark">
+        <Navbar.Brand href="/">Gnutella</Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="mr-auto">
+            <NavDropdown title="Sample Programs" id="basic-nav-dropdown">
+              {
+                ProgramList.map(p => {
+                  return <LinkContainer to={p.route}><NavDropdown.Item>{p.name}</NavDropdown.Item></LinkContainer>
+                })
+              }
+            </NavDropdown>
+            <Nav.Link href="#about">About</Nav.Link>
+          </Nav>
+        </Navbar.Collapse>
+      </Navbar>
+      <div className="padded-container">
+        <Container fluid >
+          <Switch>
+            {
+              ProgramList.map(p => {
+                return <Route path={p.route}>
+                  <App code={p.code} />
+                </Route>
+              })
+            }
+            <Route path="/">
+              <App code={ProgramList[0].code} />
+            </Route>
+          </Switch>
+        </Container>
+      </div>
+    </Router>
+  )
+}
+
+interface AppProps {
+  code: string
+}
+
+class App extends React.Component<AppProps> {
   vmEngine: VmEngine
   state: State
   monaco: any
   decorations: any
 
-  constructor(props) {
+  constructor(props: AppProps) {
     super(props)
     this.vmEngine = new VmEngine(DummyTrace)
     this.state = {
@@ -115,7 +84,7 @@ class App extends React.Component {
       highlightedPtr: 0,
       isEditing: true,
       isWaiting: false,
-      code: dummyCode,
+      code: props.code,
       trace: DummyTrace
     }
     this.decorations = []
@@ -224,28 +193,20 @@ class App extends React.Component {
 
     return (
       <>
-        <Navbar bg="dark" variant="dark">
-          <Navbar.Brand href="/">Gnutella</Navbar.Brand>
-          <Nav className="mr-auto" navbar></Nav>
-        </Navbar>
-        <div className="padded-container">
-          <Container fluid={true}>
-            <Row>
-              <Col xs="5">
-                {editor}
-              </Col>
-              <Col xs="2">
-                {!this.state.isEditing && !this.state.isWaiting ? stack : <></>}
-              </Col>
-              <Col>
-                {!this.state.isEditing && !this.state.isWaiting ? heap : <></>}
-              </Col>
-            </Row>
-          </Container>
-        </div>
+        <Row>
+          <Col xs="5">
+            {editor}
+          </Col>
+          <Col xs="2">
+            {!this.state.isEditing && !this.state.isWaiting ? stack : <></>}
+          </Col>
+          <Col>
+            {!this.state.isEditing && !this.state.isWaiting ? heap : <></>}
+          </Col>
+        </Row>
       </>
     );
   }
 }
 
-export default App;
+export default AppContainer;
