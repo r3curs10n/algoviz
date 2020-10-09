@@ -39,6 +39,10 @@ app.post('/trace', bodyParser.json(), function(req, res) {
   })
 })
 
+app.get('/programs/:pid', function(req, res) {
+  res.sendfile(getAbsolutePath('algovizui/build/index.html'))
+})
+
 app.use(express.static(getAbsolutePath('algovizui/build')))
 
 app.listen(port, () => {
