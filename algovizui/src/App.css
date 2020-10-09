@@ -41,6 +41,19 @@
 	background: lightblue;
 }
 
+.highlightedBackground {
+  background: rgb(217, 230, 235);
+}
+
 .padded-container {
   padding-top: 15px
+}
+
+.overlay-wrapper {
+  display: 'inline-block';
+  cursor: 'not-allowed';
+}
+
+.disabled-element {
+  pointer-events: 'none';
 }

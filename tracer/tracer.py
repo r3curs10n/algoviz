@@ -23,7 +23,11 @@ class Variable:
         if x is None:
             z.val = 0
             z.isPtr = True
-        if isinstance(x, primitives):
+        elif isinstance(x, tuple):
+            # Represent tuple as a null ptr for now
+            z.val = -1
+            z.isPtr = True
+        elif isinstance(x, primitives):
             z.val = x
             z.isPtr = False
         else:
@@ -52,14 +56,7 @@ class VariableCollection:
     def __init__(self, collection: dict):
         self.vars = {}
         for varName, varVal in collection.items():
-            var = Variable()
-            if isinstance(varVal, primitives):
-                var.isPtr = False
-                var.val = varVal
-            else:
-                var.isPtr = True
-                var.val = id(varVal)
-            self.vars[varName] = var
+            self.vars[varName] = Variable.fromReal(varVal)
 
     def toJson(self):
         varsJson = {}
@@ -80,6 +77,8 @@ class VirtualHeap:
     def trackTransitive(self, e):
         if e is None:
             return
+        if not self.objects.get(id(e)) is None:
+            return
         if isinstance(e, primitives):
             return
         elif isinstance(e, list):
@@ -89,8 +88,8 @@ class VirtualHeap:
                 self.objects[id(e)][i] = Variable.fromReal(child)
                 self.trackTransitive(child)
         elif isinstance(e, tuple):
-            for i, child in e:
-                self.trackTransitive(child)
+            for nested in e:
+                self.trackTransitive(nested)
         elif isinstance(e, dict):
             if id(e) not in self.objects:
                 self.objects[id(e)] = {}
@@ -217,6 +216,7 @@ class ProgramHistory:
         self.log = []
         self.executionStartTimeSeconds = time.time()
         self.shouldStopTracking = False
+        self.mostRecentHeapJson = self.state.heap.toJson()
 
     def appendBatchedOps(self, ops):
         if len(ops) > 0:
@@ -226,29 +226,32 @@ class ProgramHistory:
         if self.shouldStopTracking:
             return
 
-        prevHeap = self.state.heap.toJson()
+        prevHeap = self.mostRecentHeapJson
         self.state.pushFrame(frame)
         self.log.append(('pushFrame', frame))
         self.state.heap.trackAll(self.state.getReachableVars())
         curHeap = self.state.heap.toJson()
         self.appendBatchedOps(VirtualHeap.heapDiff(prevHeap, curHeap))
 
+        self.mostRecentHeapJson = curHeap
+
     def popFrame(self, returnVal):
         if self.shouldStopTracking:
             return
 
-        prevHeap = self.state.heap.toJson()
+        prevHeap = self.mostRecentHeapJson
 
         additionalVars = [returnVal]
         if (self.state.getActiveFrame().methodName == "__init__"):
             additionalVars.append(self.state.getActiveFrame().locals["self"])
 
-        self.state.popFrame()
-        self.log.append(('return', Variable.fromReal(returnVal).toJson()))
-        self.log.append(('popFrame', returnVal))
         self.state.heap.trackAll(self.state.getReachableVars() + additionalVars)
         curHeap = self.state.heap.toJson()
         self.appendBatchedOps(VirtualHeap.heapDiff(prevHeap, curHeap))
+
+        self.state.popFrame()
+        self.log.append(('return', Variable.fromReal(returnVal).toJson()))
+        self.log.append(('popFrame', returnVal))
 
     def update(self, frame: ProgramFrame, globals):
         if self.shouldStopTracking:
@@ -271,7 +274,7 @@ class ProgramHistory:
             elif varVal != self.state.getActiveFrame().locals[varName]:
                 self.log.append(('updateLocal', varName, wrapped.toJson()))
 
-        prevHeap = self.state.heap.toJson()
+        prevHeap = self.mostRecentHeapJson
 
         self.state.update(frame, globals)
 
@@ -280,6 +283,8 @@ class ProgramHistory:
         self.appendBatchedOps(VirtualHeap.heapDiff(prevHeap, curHeap))
 
         self.log.append(('line', frame.lineNumber))
+
+        self.mostRecentHeapJson = curHeap
 
     @staticmethod
     def filterGlobals(globals) -> dict:

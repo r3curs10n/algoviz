@@ -4,6 +4,7 @@ import React from 'react'
 import { isNullOrUndefined } from 'util'
 import { ProgramObjectUI } from './ProgramObjectUI'
 import { ProgramHeapGraphUI } from './ProgramHeapGraphUI'
+import '../../App.css'
 
 class OneDArray {
   static is(obj: VmHeapObject, _vmEngine: VmEngine) {
@@ -182,8 +183,8 @@ export const ProgramHeapUI = (props: ProgramHeapUIProps) => {
     const r = createUIFor(e, props.vmEngine, props.onVmObjectClick)
     r.consumed.forEach(v => consumed.add(v))
     elements.push(
-      <Card border={props.highlightedPtr === ptr ? "primary" : null}>
-        <Card.Body>
+      <Card>
+        <Card.Body className={props.highlightedPtr === ptr ? "highlightedBackground" : null}>
           {r.ui}
         </Card.Body>
       </Card>

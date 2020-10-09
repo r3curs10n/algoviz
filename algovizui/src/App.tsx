@@ -2,17 +2,17 @@ import React from 'react';
 import './App.css';
 import { trace as DummyTrace } from './traces/sample'
 import { ProgramStackUI } from './ui/stack/ProgramStackUI';
-import { BsArrowLeft, BsArrowRight } from 'react-icons/bs'
+import { BsArrowLeft, BsArrowRight, BsArrowBarRight } from 'react-icons/bs'
 import { VmEngine } from './vm/VirtualMachine';
-import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col, Form, Spinner } from 'react-bootstrap'
+import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col, Form, Spinner, Tooltip, OverlayTrigger, Popover } from 'react-bootstrap'
 import Editor from "@monaco-editor/react";
 import * as Monaco from 'monaco-editor/esm/vs/editor/editor.main';
 import { ProgramHeapUI } from './ui/stack/ProgramHeapUI';
 import superagent from 'superagent'
-import { ProgramHeapGraphUI } from './ui/stack/ProgramHeapGraphUI';
 
 
 const dummyCode: string = `
+
 def fillMatrix(m):
     """
     index: m[i][j]
@@ -38,6 +38,25 @@ class TreeNode:
         self.left = None
         self.right = None
 
+class ListNode:
+    """
+    pointers: next
+    """
+    def __init__(self):
+        self.data = 0
+        self.next = None
+
+def constructList():
+    head = ListNode()
+    head.data = 1
+
+    cur = head
+    for i in range (2, 5):
+        cur.next = ListNode()
+        cur.next.data = i
+        cur = cur.next
+    return head
+
 def constructTree():
     a = TreeNode()
     b = TreeNode()
@@ -49,12 +68,26 @@ def constructTree():
     a.right = c
     a.data += 1
 
+def reverseList(head):
+    if head.next is None:
+        return (head, head)
+    newHead, newTail = reverseList(head.next)
+    newTail.next = head
+    head.next = None
+    return newHead, head
+
 def main():
-    constructTree()
-    testMap = {1: 100, 2: 200}
+    # constructTree()
+    # testMap = {1: 100, 2: 200}
     m = [[0,0,0], [0,0,0], [0,0,0]]
     fillMatrix(m)
     # fibonacci(4)
+
+    l = constructList()
+    newHead, newTail = reverseList(l)
+    return 0
+
+
 
 `;
 
@@ -91,15 +124,17 @@ class App extends React.Component {
     const onVmObjectClick = ptr => {
       this.setState({ highlightedPtr: ptr})
     }
-    const stack = <ProgramStackUI vmEngine={this.vmEngine} onVmObjectClick={onVmObjectClick} />
+    const stack = <ProgramStackUI highlightedPtr={this.state.highlightedPtr} vmEngine={this.vmEngine} onVmObjectClick={onVmObjectClick} />
 
     const heap = <ProgramHeapUI vmEngine={this.vmEngine} highlightedPtr={this.state.highlightedPtr} onVmObjectClick={onVmObjectClick} />
 
     const incrementExecutionStep = (val: number) => {
-      if (val > 0) {
+      if (val === 1) {
         this.vmEngine.nextStep()
-      } else {
+      } else if (val === -1) {
         this.vmEngine.prevStep()
+      } else if (val === 10) {
+        this.vmEngine.nextAndSkipFunction()
       }
       const line = this.vmEngine.executionLineNumber
       let newDecorations = []
@@ -150,8 +185,9 @@ class App extends React.Component {
     const getRunControls = () => {
       if (this.state.isEditing === false && this.state.isWaiting == false) {
         return <ButtonGroup>
-          <Button onClick={() => { incrementExecutionStep(-1) }}><BsArrowLeft /></Button>
-          <Button onClick={() => { incrementExecutionStep(1) }}><BsArrowRight /></Button>
+          <Button onClick={() => { incrementExecutionStep(-1) }}><BsArrowLeft />Previous</Button>
+          <Button onClick={() => { incrementExecutionStep(1) }}><BsArrowRight />Next</Button>
+          <Button onClick={() => { incrementExecutionStep(10)}} disabled={!this.vmEngine.isAboutToEnterFunction()} ><BsArrowBarRight /> Step Over Function</Button>
         </ButtonGroup>
       } else if (this.state.isWaiting === true) {
         return <Spinner animation="border" />
@@ -193,11 +229,11 @@ class App extends React.Component {
               <Col xs="5">
                 {editor}
               </Col>
-              <Col xs="3">
+              <Col xs="2">
                 {!this.state.isEditing && !this.state.isWaiting ? stack : <></>}
               </Col>
               <Col>
-                {!this.state.isEditing && !this.state.isWaiting || true ? heap : <></>}
+                {!this.state.isEditing && !this.state.isWaiting ? heap : <></>}
               </Col>
             </Row>
           </Container>

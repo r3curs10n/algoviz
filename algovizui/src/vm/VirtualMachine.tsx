@@ -192,12 +192,35 @@ export class VmEngine {
 
   nextStep() {
     this.nextStepInternal()
-    // let curLine = this.executionLineNumber
-    // while (this.executionLineNumber == curLine) {
-    //   if (!this.nextStepInternal()) {
-    //     break
-    //   }
-    // }
+  }
+
+  isAboutToEnterFunction() {
+    if (this.executionStepIndex <= 0) {
+      return false
+    }
+    return this.executionStepIndex + 1 < this.programTrace.length && this.programTrace[this.executionStepIndex + 1].op === "pushFrame"
+  }
+
+  nextAndSkipFunction() {
+    if (this.isAboutToEnterFunction()) {
+      let depth = 0
+      let movedForward = false
+      while (true) {
+        if (this.executionStepIndex >= this.programTrace.length) {
+          break
+        }
+        if (this.programTrace[this.executionStepIndex].op === "pushFrame") {
+          depth++
+        } else if (this.programTrace[this.executionStepIndex].op === "popFrame") {
+          depth--
+          movedForward = true
+        }
+        this.nextStepInternal()
+        if (depth === 0 && movedForward) {
+          break
+        }
+      }
+    }
   }
 
   executeStep(e: any) {
