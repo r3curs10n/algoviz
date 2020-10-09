@@ -77,5 +77,31 @@ def main():
     traverseInOrder(outList, root)
     return 0
 `
+  },
+  {
+    route: "/programs/insertion-sort",
+    name: "Insertion Sort",
+    code: `
+def insertionSort(v):
+    """
+    index: v[i]
+    index: v[j]
+    """
+    i = 0
+    while i < len(v) - 1:
+        j = i + 1
+        while j >= 1:
+            if v[j] < v[j-1]:
+                v[j-1], v[j] = v[j], v[j-1]
+                j -= 1
+            else:
+                break
+        i += 1
+
+def main():
+    v = [4, 3, 2, 1]
+    insertionSort(v)
+    return 0
+`
   }
 ]
