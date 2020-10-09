@@ -5,11 +5,6 @@ import argparse
 import json
 
 dummyCode = '''
-def hello():
-    """
-    index: v[i][j]
-    """
-
 class TreeNode:
     """
     pointers: left, right
@@ -18,6 +13,17 @@ class TreeNode:
         self.left = None
         self.right = None
         self.data = 0
+
+def hello():
+    """
+    index: v[i][j]
+    """
+    hello()
+    x = TreeNode()
+    try:
+        y=5
+    except:
+        pass
 '''
 
 class ArrayIndexInference:
@@ -44,11 +50,11 @@ class MemberPointerInference:
 def infer(code):
     tree = ast.parse(code)
 
-    class ArrayIndexInferer(ast.NodeVisitor):
-        inferences = []
+    class Inferer(ast.NodeVisitor):
 
         def __init__(self):
             self.inferences = []
+            self.securityIssue = None
 
         def parseArrayIndexInference(self, funcName: str, raw: str):
             if not ":" in raw:
@@ -99,16 +105,45 @@ def infer(code):
 
             self.generic_visit(node)
 
-    inferer = ArrayIndexInferer()
+        # Override
+        def visit_Import(self, node):
+            self.securityIssue = "Imports not allowed"
+
+        # Override
+        def visit_ImportFrom(self, node):
+            self.securityIssue = "Imports not allowed"
+
+        # Override
+        def visit_Call(self, node):
+            funcName = node.func.id
+            if funcName in ["exec", "eval", "globals", "locals", "dir", "setattr", "getattr", "open", "compile"]:
+                self.securityIssue = "Use of {}() not allowed".format(funcName)
+
+        # Override
+        def visit_Try(self, node):
+            self.securityIssue = "Exceptions not allowed"
+
+        # Override
+        def visit_TryExcept(self, node):
+            self.securityIssue = "Exceptions not allowed"
+
+        # Override
+        def visit_TryFinally(self, node):
+            self.securityIssue = "Exceptions not allowed"
+
+    inferer = Inferer()
     inferer.visit(tree)
-    return (None, [e.toJson() for e in inferer.inferences])
+    error = None
+    if not inferer.securityIssue is None:
+        error = {"msg": inferer.securityIssue}
+    return (error, [e.toJson() for e in inferer.inferences])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', help='Filename to run infer on')
     args = parser.parse_args()
     if not args.file:
-        print(infer(dummyCode)[1])
+        print(infer(dummyCode))
     else:
         with open(args.file) as f:
-            print(json.dumps(infer(f.read())[1]))
+            print(infer(f.read()))

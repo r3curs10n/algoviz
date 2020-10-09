@@ -24,12 +24,13 @@ class RunnerOutput:
 
 def __run(moduleName):
     code = open(moduleName.replace(".", "/") + ".py").read()
+    error = None
     try:
         error, inferences = infer.infer(code)
     except SyntaxError as e:
-        print(RunnerOutput(error={"type": "syntax_error", "line": e.lineno, "msg": e.msg}).toJsonStr())
+        print(RunnerOutput(error={"type": "syntax_error", "line": e.lineno, "msg": "Line {}: {}".format(e.lineno, e.msg)}).toJsonStr())
         return
-    if error:
+    if not error is None:
         print(RunnerOutput(error=error).toJson())
         return
 
@@ -37,13 +38,13 @@ def __run(moduleName):
         module = importlib.import_module(moduleName)
         module.main()
     except tracer.TimeoutException:
-        print(RunnerOutput(error={"type": "timeout"}, log=tracer.history.toJson(), inferences=inferences).toJsonStr())
+        print(RunnerOutput(error={"type": "timeout", "msg": "Code timed out"}, log=tracer.history.toJson(), inferences=inferences).toJsonStr())
         return
     except:
         print(RunnerOutput(error={"type": "runtime", "msg": str(sys.exc_info()[0])}, log=tracer.history.toJson(), inferences=inferences).toJsonStr())
         return
 
-    print(RunnerOutput(log=tracer.history.toJson(), inferences=inferences).toJsonStr())
+    print(RunnerOutput(error=error, log=tracer.history.toJson(), inferences=inferences).toJsonStr())
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--module', help='Module name to trace')

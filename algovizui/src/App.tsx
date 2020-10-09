@@ -4,11 +4,12 @@ import { trace as DummyTrace } from './traces/sample'
 import { ProgramStackUI } from './ui/stack/ProgramStackUI';
 import { BsArrowLeft, BsArrowRight, BsArrowBarRight } from 'react-icons/bs'
 import { VmEngine } from './vm/VirtualMachine';
-import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col, Form, Spinner, Tooltip, OverlayTrigger, Popover } from 'react-bootstrap'
+import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col, Form, Spinner, Tooltip, OverlayTrigger, Popover, Alert } from 'react-bootstrap'
 import Editor from "@monaco-editor/react";
 import * as Monaco from 'monaco-editor/esm/vs/editor/editor.main';
 import { ProgramHeapUI } from './ui/stack/ProgramHeapUI';
 import superagent from 'superagent'
+import { isNullOrUndefined } from 'util';
 
 
 const dummyCode: string = `
@@ -122,7 +123,7 @@ class App extends React.Component {
 
   render() {
     const onVmObjectClick = ptr => {
-      this.setState({ highlightedPtr: ptr})
+      this.setState({ highlightedPtr: ptr })
     }
     const stack = <ProgramStackUI highlightedPtr={this.state.highlightedPtr} vmEngine={this.vmEngine} onVmObjectClick={onVmObjectClick} />
 
@@ -187,7 +188,7 @@ class App extends React.Component {
         return <ButtonGroup>
           <Button onClick={() => { incrementExecutionStep(-1) }}><BsArrowLeft />Previous</Button>
           <Button onClick={() => { incrementExecutionStep(1) }}><BsArrowRight />Next</Button>
-          <Button onClick={() => { incrementExecutionStep(10)}} disabled={!this.vmEngine.isAboutToEnterFunction()} ><BsArrowBarRight /> Step Over Function</Button>
+          <Button onClick={() => { incrementExecutionStep(10) }} disabled={!this.vmEngine.isAboutToEnterFunction()} ><BsArrowBarRight /> Step Over Function</Button>
         </ButtonGroup>
       } else if (this.state.isWaiting === true) {
         return <Spinner animation="border" />
@@ -195,9 +196,13 @@ class App extends React.Component {
       return <></>
     }
 
+    const maybeError = !this.state.isEditing && !this.state.isWaiting && !isNullOrUndefined(this.state.trace.error) && (this.state.trace.error.type !== "runtime" || this.vmEngine.executionStepIndex >= this.vmEngine.programTrace.length) ? <Alert style={{ marginTop: "15px" }} key="error" variant="danger">
+      {this.state.trace.error.msg}
+    </Alert> : null
+
     const editor = <>
       <Editor
-        height="80vh"
+        height="70vh"
         language="python"
         value={this.state.code}
         theme={this.state.isEditing ? "dark" : "light"}
@@ -214,6 +219,7 @@ class App extends React.Component {
           </Col>
         </Form.Row>
       </Form>
+      {maybeError}
     </>
 
     return (
