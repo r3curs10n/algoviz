@@ -31,7 +31,7 @@ def __run(moduleName):
         print(RunnerOutput(error={"type": "syntax_error", "line": e.lineno, "msg": "Line {}: {}".format(e.lineno, e.msg)}).toJsonStr())
         return
     if not error is None:
-        print(RunnerOutput(error=error).toJson())
+        print(RunnerOutput(error=error).toJsonStr())
         return
 
     try:
