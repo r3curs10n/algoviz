@@ -225,9 +225,8 @@ class App extends React.Component {
     return (
       <>
         <Navbar bg="dark" variant="dark">
-          <Navbar.Brand href="/">Aphrodite</Navbar.Brand>
+          <Navbar.Brand href="/">Gnutella</Navbar.Brand>
           <Nav className="mr-auto" navbar></Nav>
-          <NavLink href="#">About</NavLink>
         </Navbar>
         <div className="padded-container">
           <Container fluid={true}>
