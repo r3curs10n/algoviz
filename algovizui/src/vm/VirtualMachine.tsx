@@ -265,11 +265,11 @@ export class VmEngine {
       obj.modifiedAtStep = this.executionStepIndex
       this.stack.getTopFrame().locals.set(e.info[0], obj)
     } else if (e.op == "return") {
-      this.executionLineNumber = -1
+      // this.executionLineNumber = -1
       this.stack.getTopFrame().returnVal = VmObject.fromVal(e.info)
       this.stack.getTopFrame().returnVal.modifiedAtStep = this.executionStepIndex
     } else if (e.op == "popFrame") {
-      this.executionLineNumber = -1
+      // this.executionLineNumber = -1
       this.stack.popFrame()
     } else if (e.op == "new") {
       const id: number = e.info[0]
