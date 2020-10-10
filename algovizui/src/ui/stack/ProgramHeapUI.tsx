@@ -23,7 +23,7 @@ class OneDArray {
           {arr.map((_, idx) => {
             const indices = annotations.filter(e => e.indexVarValue === idx && e.indexDimension === 0).map(e => e.indexVarName)
             const annotation = indices.length > 0 ? '(' + indices.join(", ") + ')' : ""
-            return <th className="w-25">{`${idx} ${annotation}`}</th>
+            return <th>{`${idx} ${annotation}`}</th>
           })}
         </tr>
       </thead>
@@ -88,11 +88,11 @@ class TwoDArray {
     const ui = <Table bordered size="sm">
       <thead>
         <tr>
-          <th className="w-25">#</th>
+          <th>#</th>
           {Array.from({ length: cols }).map((_, idx) => {
             const indices = annotations.filter(e => e.indexVarValue === idx && e.indexDimension === 1).map(e => e.indexVarName)
             const annotation = indices.length > 0 ? '(' + indices.join(", ") + ')' : ""
-            return <th className="w-25">{`${idx} ${annotation}`}</th>
+            return <th>{`${idx} ${annotation}`}</th>
           })}
         </tr>
       </thead>
@@ -169,7 +169,7 @@ const createUIFor = (obj: VmHeapObject, vmEngine: VmEngine, onVmObjectClick) => 
   }
   return {
     consumed: new Set(),
-    ui: <div>Not Supported</div>
+    ui: <div>Object {`#${obj.ptr} (${obj.type})`}</div>
   }
 }
 

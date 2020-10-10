@@ -103,5 +103,38 @@ def main():
     insertionSort(v)
     return 0
 `
+  },
+  {
+      route: "/programs/longest-increasing-subsequence",
+      name: "DP: Longest Increasing Subsequence",
+      code: `
+def longestCommonSubsequence(x, y):
+    """
+    index: dp[i][j]
+    index: x[i]
+    index: y[j]
+    """
+    m = len(x)
+    n = len(y)
+
+    dp = [[0]*(n+1) for i in range(m+1)]
+
+    for i in range(m+1):
+        for j in range(n+1):
+            if i==0 or j==0:
+                dp[i][j] = 0
+            elif x[i-1] == y[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+
+    return dp[m][n]
+
+def main():
+    x = ["A", "G", "G", "T"]
+    y = ["G", "X", "T", "X"]
+    lcs = longestCommonSubsequence(x, y)
+    return 0
+`
   }
 ]
