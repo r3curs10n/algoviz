@@ -30,14 +30,16 @@ export class ProgramHeapGraphUI extends React.Component<ProgramHeapGraphUIProps>
     }
   }
 
-  static getLabelFor(obj: VmHeapObject, annotations: Array<MemberPointerInference>) {
-    let dataMemebrs = []
+  static getLabelFor(obj: VmHeapObject, annotations: Array<MemberPointerInference>, namedReferences: string[]) {
+    let rows = []
     obj.mapObject.forEach((val, key) => {
       if (!annotations.find(e => e.member === key)) {
-        dataMemebrs.push(`${key}: ${val.toString()}`)
+        rows.push(`*${key}: ${val.toString()}*`)
       }
     })
-    return dataMemebrs.length > 0 ? dataMemebrs.join("\n") : "..."
+
+    let label = rows.length > 0 ? rows.join("\n") : "*...*"
+    return label + (namedReferences.length > 0 ? ("\n(" + namedReferences.join(", ")) + ")" : "")
   }
 
   static createUI(vmEngine: VmEngine, highlightedPtr: number) {
@@ -45,16 +47,15 @@ export class ProgramHeapGraphUI extends React.Component<ProgramHeapGraphUIProps>
     const nodes = []
     const edges = []
     const consumed = new Set()
+    const namedReferencesMap = vmEngine.getTopFrameNamedReferencesMap()
     heap.storage.forEach((obj, ptr) => {
       const annotations = vmEngine.getMemberPointerAnnotationsFor(ptr)
-      console.log('annotations')
-      console.log(annotations)
       if (annotations.length > 0) {
         consumed.add(ptr)
-        nodes.push({id: ptr, label: ProgramHeapGraphUI.getLabelFor(obj, annotations)})
+        nodes.push({id: ptr, label: ProgramHeapGraphUI.getLabelFor(obj, annotations, namedReferencesMap.get(ptr) ?? []), color: {background: "#d9e6eb"}, shape: "box", font: {multi: "md"}})
         annotations.forEach(annotation => {
           if (obj.mapObject.has(annotation.member) && obj.mapObject.get(annotation.member).ptrValue !== 0)
-          edges.push({from: ptr, to: obj.mapObject.get(annotation.member).ptrValue, arrows: "to"})
+          edges.push({from: ptr, to: obj.mapObject.get(annotation.member).ptrValue, arrows: "to", label: annotation.member})
         })
       }
     })
@@ -62,8 +63,6 @@ export class ProgramHeapGraphUI extends React.Component<ProgramHeapGraphUIProps>
       nodes: new visjs.DataSet(nodes),
       edges: new visjs.DataSet(edges),
     }
-    console.log('fdata')
-    console.log(data)
     return {
       consumed: consumed,
       ui: <ProgramHeapGraphUI data={data} vmEngine={vmEngine} highlightedPtr={highlightedPtr} />
@@ -76,8 +75,6 @@ export class ProgramHeapGraphUI extends React.Component<ProgramHeapGraphUIProps>
 
   render() {
     if (!isNullOrUndefined(this.visjsDomRef.current)) {
-      console.log('render')
-      console.log(this.props.data)
       this.graph = new visjs.Network(this.visjsDomRef.current, this.props.data, this.options);
       if (!isNullOrUndefined(this.props.data.nodes.get(this.props.highlightedPtr))) {
         this.props.data.nodes.update([{id: this.props.highlightedPtr, color: {background: "#AAFFAA"}}])

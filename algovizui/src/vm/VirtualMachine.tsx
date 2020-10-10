@@ -87,6 +87,13 @@ export class VmStackFrame {
     }
     return null
   }
+
+  getAllVariables() {
+    const vars: Map<string, VmObject> = new Map()
+    this.args.forEach((v, k) => vars.set(k, v))
+    this.locals.forEach((v, k) => vars.set(k, v))
+    return vars
+  }
 }
 
 export class VmStack {
@@ -188,6 +195,24 @@ export class VmEngine {
     this.programInfer = trace.infer
     this.stack = new VmStack()
     this.heap = new VmHeap()
+  }
+
+  getTopFrameNamedReferencesMap() {
+    const map: Map<number, Array<string>> = new Map()
+    if (isNullOrUndefined(this.stack.getTopFrame())) {
+      return map
+    }
+
+    this.stack.getTopFrame().getAllVariables().forEach((v, k) => {
+      if (isNullOrUndefined(v.ptrValue)) {
+        return
+      }
+      if (!map.has(v.ptrValue)) {
+        map.set(v.ptrValue, [])
+      }
+      map.get(v.ptrValue).push(k)
+    })
+    return map
   }
 
   nextStep() {

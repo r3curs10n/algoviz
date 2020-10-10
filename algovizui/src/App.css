@@ -38,11 +38,11 @@
 }
 
 .highlightedLine {
-	background: lightblue;
+	background: #add8e6;
 }
 
 .highlightedBackground {
-  background: rgb(217, 230, 235);
+  background: #d9e6eb;
 }
 
 .padded-container {
