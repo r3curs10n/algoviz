@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import { trace as DummyTrace } from './traces/sample'
 import { ProgramStackUI } from './ui/stack/ProgramStackUI';
 import { BsArrowLeft, BsArrowRight, BsArrowBarRight, BsPlay, BsPause, BsArrowCounterclockwise } from 'react-icons/bs'
 import { VmEngine } from './vm/VirtualMachine';
-import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col, Form, Spinner, Tooltip, OverlayTrigger, Popover, Alert, NavDropdown, FormControl, ProgressBar } from 'react-bootstrap'
+import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col, Form, Spinner, Tooltip, OverlayTrigger, Popover, Alert, NavDropdown, FormControl, ProgressBar, Modal } from 'react-bootstrap'
 import Editor from "@monaco-editor/react";
 import * as Monaco from 'monaco-editor/esm/vs/editor/editor.main';
 import { ProgramHeapUI } from './ui/stack/ProgramHeapUI';
@@ -19,6 +19,10 @@ import {
 } from "react-router-dom";
 
 const AppContainer = () => {
+  const [showAbout, setShowAbout] = useState(false);
+
+  const handleCloseAbout = () => setShowAbout(false);
+  const handleShowAbout = () => setShowAbout(true);
   return (
     <Router forceRefresh>
       <Navbar bg="dark" variant="dark">
@@ -33,7 +37,7 @@ const AppContainer = () => {
                 })
               }
             </NavDropdown>
-            <Nav.Link href="#about">About</Nav.Link>
+            <Nav.Link href="#" onClick={handleShowAbout}>About</Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Navbar>
@@ -53,6 +57,26 @@ const AppContainer = () => {
           </Switch>
         </Container>
       </div>
+      <Modal show={showAbout} onHide={handleCloseAbout}>
+        <Modal.Header closeButton>
+          <Modal.Title>Gnutella</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Container>
+            <Row className="padding-15">
+              Hi fellow programmer, Gnutella is a tool for visualizing code execution. Hope you like it!
+            </Row>
+            <Row className="padding-15">
+          Author:&nbsp;<a href="https://www.linkedin.com/in/shreyas-basarge-b4ba4653/">Shreyas</a>&nbsp;(<a href="mailto:shreyas.basarge@gmail.com">email</a>)
+            </Row>
+          </Container>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseAbout}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Router>
   )
 }

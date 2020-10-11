@@ -49,6 +49,10 @@
   padding-top: 15px
 }
 
+.padding-15 {
+  padding: 15px
+}
+
 .overlay-wrapper {
   display: 'inline-block';
   cursor: 'not-allowed';
