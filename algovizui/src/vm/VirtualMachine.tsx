@@ -189,12 +189,16 @@ export class VmEngine {
   programInfer: Array<Inference>
   executionStepIndex: number = -1
   executionLineNumber: number = -1
+  enableFastForward = false
 
   constructor(trace) {
     this.programTrace = trace.log
     this.programInfer = trace.infer
-    this.stack = new VmStack()
-    this.heap = new VmHeap()
+    this.reset()
+  }
+
+  hasExecutionFinished() {
+    return this.executionStepIndex >= this.programTrace.length
   }
 
   getTopFrameNamedReferencesMap() {
@@ -216,6 +220,13 @@ export class VmEngine {
   }
 
   nextStep() {
+    if (this.enableFastForward && this.isAboutToEnterFunction()) {
+      const funcName = this.programTrace[this.executionStepIndex + 1].info.function
+      if (this.programInfer.some(inference => inference.type === "fastForward" && inference.data.function === funcName)) {
+        this.nextAndSkipFunction()
+        return
+      }
+    }
     this.nextStepInternal()
   }
 
@@ -335,9 +346,11 @@ export class VmEngine {
   }
 
   reset() {
-    this.executionLineNumber = -1
-    this.executionStepIndex = -1
     this.stack = new VmStack()
+    this.heap = new VmHeap()
+    this.executionStepIndex = -1
+    this.executionLineNumber = -1
+    this.enableFastForward = false
   }
 
   getMemberPointerAnnotationsFor(ptr: number) {
@@ -352,6 +365,10 @@ export class VmEngine {
   getArrayIndexAnnotationsFor(ptr: number) {
     const frame = this.stack.getTopFrame()
     const inferences: Array<ArrayIndexAnnotation> = []
+    if (isNullOrUndefined(frame)) {
+      return inferences
+    }
+
     frame.locals.forEach((localVarValue, localVarName) => {
       this.programInfer.forEach(genericInference => {
         if (genericInference.type !== "arrayIndex") {

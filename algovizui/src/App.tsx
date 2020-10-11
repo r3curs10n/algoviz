@@ -2,9 +2,9 @@ import React from 'react';
 import './App.css';
 import { trace as DummyTrace } from './traces/sample'
 import { ProgramStackUI } from './ui/stack/ProgramStackUI';
-import { BsArrowLeft, BsArrowRight, BsArrowBarRight } from 'react-icons/bs'
+import { BsArrowLeft, BsArrowRight, BsArrowBarRight, BsPlay, BsPause, BsArrowCounterclockwise } from 'react-icons/bs'
 import { VmEngine } from './vm/VirtualMachine';
-import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col, Form, Spinner, Tooltip, OverlayTrigger, Popover, Alert, NavDropdown, FormControl } from 'react-bootstrap'
+import { Button, ButtonGroup, Navbar, NavbarBrand, Nav, NavLink, Container, Row, Col, Form, Spinner, Tooltip, OverlayTrigger, Popover, Alert, NavDropdown, FormControl, ProgressBar } from 'react-bootstrap'
 import Editor from "@monaco-editor/react";
 import * as Monaco from 'monaco-editor/esm/vs/editor/editor.main';
 import { ProgramHeapUI } from './ui/stack/ProgramHeapUI';
@@ -17,15 +17,6 @@ import {
   Switch,
   Route,
 } from "react-router-dom";
-
-interface State {
-  lineNumber: number
-  highlightedPtr: number
-  isEditing: boolean
-  isWaiting: boolean
-  code: string
-  trace: any
-}
 
 const AppContainer = () => {
   return (
@@ -70,11 +61,22 @@ interface AppProps {
   code: string
 }
 
+interface State {
+  lineNumber: number
+  highlightedPtr: number
+  isEditing: boolean
+  isWaiting: boolean
+  isPaused: boolean
+  code: string
+  trace: any
+}
+
 class App extends React.Component<AppProps> {
   vmEngine: VmEngine
   state: State
   monaco: any
   decorations: any
+  timer: any
 
   constructor(props: AppProps) {
     super(props)
@@ -84,10 +86,57 @@ class App extends React.Component<AppProps> {
       highlightedPtr: 0,
       isEditing: true,
       isWaiting: false,
+      isPaused: true,
       code: props.code,
       trace: DummyTrace
     }
     this.decorations = []
+  }
+
+  pause() {
+    this.setState({isPaused: true})
+    this.vmEngine.enableFastForward = false
+    if (!isNullOrUndefined(this.timer)) {
+      clearInterval(this.timer)
+    }
+  }
+
+  play() {
+    this.setState({isPaused: false})
+    this.vmEngine.enableFastForward = true
+    this.timer = setInterval(() => {
+      if (!this.vmEngine.hasExecutionFinished()) {
+        this.incrementExecutionStep(1)
+      }
+    }, 1000 /* ms */)
+  }
+
+  incrementExecutionStep = (val: number) => {
+    if (val === 0) {
+      this.vmEngine.reset()
+    } else if (val === 1) {
+      this.vmEngine.nextStep()
+    } else if (val === -1) {
+      this.vmEngine.prevStep()
+    } else if (val === 10) {
+      this.vmEngine.nextAndSkipFunction()
+    }
+    const line = this.vmEngine.executionLineNumber
+    let newDecorations = []
+    if (line > 0) {
+      this.monaco.revealLineInCenter(line);
+      newDecorations = [
+        {
+          range: new Monaco.Range(line, 1, line, 1),
+          options: {
+            isWholeLine: true,
+            className: 'highlightedLine',
+          }
+        }
+      ]
+    }
+    this.decorations = this.monaco.deltaDecorations(this.decorations, newDecorations)
+    this.setState({ lineNumber: this.vmEngine.executionLineNumber })
   }
 
   render() {
@@ -98,32 +147,6 @@ class App extends React.Component<AppProps> {
 
     const heap = <ProgramHeapUI vmEngine={this.vmEngine} highlightedPtr={this.state.highlightedPtr} onVmObjectClick={onVmObjectClick} />
 
-    const incrementExecutionStep = (val: number) => {
-      if (val === 1) {
-        this.vmEngine.nextStep()
-      } else if (val === -1) {
-        this.vmEngine.prevStep()
-      } else if (val === 10) {
-        this.vmEngine.nextAndSkipFunction()
-      }
-      const line = this.vmEngine.executionLineNumber
-      let newDecorations = []
-      if (line > 0) {
-        this.monaco.revealLineInCenter(line);
-        newDecorations = [
-          {
-            range: new Monaco.Range(line, 1, line, 1),
-            options: {
-              isWholeLine: true,
-              className: 'highlightedLine',
-            }
-          }
-        ]
-      }
-      this.decorations = this.monaco.deltaDecorations(this.decorations, newDecorations)
-      this.setState({ lineNumber: this.vmEngine.executionLineNumber })
-    }
-
     const handleEditorDidMount = (_, editor) => {
       this.monaco = editor
     }
@@ -131,6 +154,7 @@ class App extends React.Component<AppProps> {
     const enterEditMode = () => {
       this.decorations = this.monaco.deltaDecorations(this.decorations, [])
       this.setState({ isEditing: true, isWaiting: false })
+      this.pause()
     }
 
     const enterRunMode = () => {
@@ -148,6 +172,7 @@ class App extends React.Component<AppProps> {
           } else {
             this.vmEngine = new VmEngine(res.body)
             this.setState({ trace: res.body, isWaiting: false })
+            this.play()
           }
         })
     }
@@ -155,9 +180,13 @@ class App extends React.Component<AppProps> {
     const getRunControls = () => {
       if (this.state.isEditing === false && this.state.isWaiting == false) {
         return <ButtonGroup>
-          <Button onClick={() => { incrementExecutionStep(-1) }}><BsArrowLeft />Previous</Button>
-          <Button onClick={() => { incrementExecutionStep(1) }}><BsArrowRight />Next</Button>
-          <Button onClick={() => { incrementExecutionStep(10) }} disabled={!this.vmEngine.isAboutToEnterFunction()} ><BsArrowBarRight /> Step Over Function</Button>
+          <Button onClick={() => { this.incrementExecutionStep(0) }} disabled={!this.state.isPaused} ><BsArrowCounterclockwise />Restart</Button>
+          <Button onClick={() => { this.incrementExecutionStep(-1) }} disabled={!this.state.isPaused} ><BsArrowLeft />Previous</Button>
+          <Button onClick={() => { this.state.isPaused ? this.play() : this.pause() }}>
+            { this.state.isPaused ? <><BsPlay />{'Play'}</> : <><BsPause />{'Pause'}</> }
+          </Button>
+          <Button onClick={() => { this.incrementExecutionStep(1) }} disabled={!this.state.isPaused} ><BsArrowRight />Next</Button>
+          <Button onClick={() => { this.incrementExecutionStep(10) }} disabled={!this.state.isPaused || !this.vmEngine.isAboutToEnterFunction()} ><BsArrowBarRight /> Step Over Function</Button>
         </ButtonGroup>
       } else if (this.state.isWaiting === true) {
         return <Spinner animation="border" />
@@ -168,6 +197,8 @@ class App extends React.Component<AppProps> {
     const maybeError = !this.state.isEditing && !this.state.isWaiting && !isNullOrUndefined(this.state.trace.error) && (this.state.trace.error.type !== "runtime" || this.vmEngine.executionStepIndex >= this.vmEngine.programTrace.length) ? <Alert style={{ marginTop: "15px" }} key="error" variant="danger">
       {this.state.trace.error.msg}
     </Alert> : null
+
+    const maybeProgressBar = !this.state.isEditing && !this.state.isWaiting ? <ProgressBar style={{ marginTop: "15px" }} now={100.0 * Math.max(this.vmEngine.executionStepIndex, 0) / this.vmEngine.programTrace.length} /> : null
 
     const editor = <>
       <Editor
@@ -183,11 +214,12 @@ class App extends React.Component<AppProps> {
           <Col xs="auto">{getRunControls()}</Col>
           <Col xs="auto">
             {
-              this.state.isEditing ? <Button onClick={enterRunMode}>Run</Button> : <Button onClick={enterEditMode}>Edit</Button>
+              this.state.isEditing ? <Button onClick={enterRunMode}>Run</Button> : <Button onClick={enterEditMode} disabled={!this.state.isPaused} >Edit</Button>
             }
           </Col>
         </Form.Row>
       </Form>
+      {maybeProgressBar}
       {maybeError}
     </>
 

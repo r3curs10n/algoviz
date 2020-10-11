@@ -60,6 +60,14 @@ class MemberPointerInference:
         dataJson = {"className": self.className, "member": self.member}
         return {"type": "memberPointer", "data": dataJson}
 
+class FastForwardInference:
+    def __init__(self, functionName):
+        self.functionName = functionName
+        pass
+
+    def toJson(self):
+        return {"type": "fastForward", "data": {"function": self.functionName}}
+
 # Returns (error, [inference])
 def infer(code):
     tree = ast.parse(code)
@@ -85,6 +93,10 @@ def infer(code):
                 e.index = i
                 self.inferences.append(e)
 
+        def parseFastForwardInference(self, funcName: str, line: str):
+            if line.strip() == "fast-forward":
+                self.inferences.append(FastForwardInference(funcName))
+
         # Override
         def visit_FunctionDef(self, node):
             metadata = ast.get_docstring(node)
@@ -93,6 +105,7 @@ def infer(code):
 
                 for line in metadata:
                     self.parseArrayIndexInference(node.name, line)
+                    self.parseFastForwardInference(node.name, line)
 
             self.generic_visit(node)
 

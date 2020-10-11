@@ -11,6 +11,9 @@ export const ProgramList: Array<ProgramEntry> = [
     code: `
 class ListNode:
     """
+    'pointers' instructs the visualizer to draw specified members
+    as arrows to other objects
+
     pointers: next
     """
     def __init__(self):
@@ -18,6 +21,12 @@ class ListNode:
         self.next = None
 
 def constructList():
+    """
+    'fast-forward' instructs the runner to skip
+    step by step visualization in autoplay mode
+
+    fast-forward
+    """
     head = ListNode()
     head.data = 1
 
@@ -49,6 +58,9 @@ def main():
 
 class TreeNode:
     """
+    'pointers' instructs the visualizer to draw specified members
+    as arrows to other objects
+
     pointers: left, right
     """
     def __init__(self, data):
@@ -64,6 +76,12 @@ def traverseInOrder(outList, root):
         traverseInOrder(outList, root.right)
 
 def constructTree():
+    """
+    'fast-forward' instructs the runner to skip
+    step by step visualization in autoplay mode
+
+    fast-forward
+    """
     root = TreeNode(0)
     root.left = TreeNode(11)
     root.right = TreeNode(12)
@@ -84,6 +102,9 @@ def main():
     code: `
 def insertionSort(v):
     """
+    'index' instructs the visualizer to draw the specified
+    local variables as indexes for the specified array
+
     index: v[i]
     index: v[j]
     """
@@ -110,6 +131,9 @@ def main():
       code: `
 def longestCommonSubsequence(x, y):
     """
+    'index' instructs the visualizer to draw the specified
+    local variables as indexes for the specified array
+
     index: dp[i][j]
     index: x[i]
     index: y[j]
