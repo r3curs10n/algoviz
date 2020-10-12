@@ -26,7 +26,7 @@ const AppContainer = () => {
   return (
     <Router forceRefresh>
       <Navbar bg="dark" variant="dark">
-        <Navbar.Brand href="/">Gnutella</Navbar.Brand>
+        <Navbar.Brand href="/">Codable</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="mr-auto">
@@ -59,12 +59,12 @@ const AppContainer = () => {
       </div>
       <Modal show={showAbout} onHide={handleCloseAbout}>
         <Modal.Header closeButton>
-          <Modal.Title>Gnutella</Modal.Title>
+          <Modal.Title>Codable</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Container>
             <Row className="padding-15">
-              Hi fellow programmer, Gnutella is a tool for visualizing code execution. Hope you like it!
+              Hi fellow programmer, Codable is a tool for visualizing code execution. Hope you like it!
             </Row>
             <Row className="padding-15">
           Author:&nbsp;<a href="https://www.linkedin.com/in/shreyas-basarge-b4ba4653/">Shreyas</a>&nbsp;(<a href="mailto:shreyas.basarge@gmail.com">email</a>)
